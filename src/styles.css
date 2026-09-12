@@ -207,3 +207,167 @@ body { margin: 0; overflow-x: hidden; }
 .logout-button:hover {
   background: #087dcc;
 }
+/* =========================
+   MAILBOX LAYOUT
+========================= */
+
+.mailbox-layout {
+  display: flex;
+  min-height: calc(100vh - 76px);
+  background: #f8f9fa;
+}
+
+.mailbox-content {
+  flex: 1;
+}
+
+
+/* =========================
+   NAVBAR
+========================= */
+
+.main-navbar {
+  min-height: 76px;
+  padding: 0 30px;
+  border-bottom: 1px solid #eee;
+}
+
+.brand-name {
+  font-weight: 700;
+  cursor: pointer;
+}
+
+
+/* =========================
+   SIDEBAR
+========================= */
+
+.sidebar {
+  width: 220px;
+  min-height: calc(100vh - 76px);
+  padding: 25px 15px;
+  background: white;
+  border-right: 1px solid #eee;
+}
+
+.compose-button {
+  width: 100%;
+  border-radius: 25px;
+  padding: 10px;
+}
+
+.sidebar .nav-link {
+  color: #333;
+  cursor: pointer;
+  padding: 12px 15px;
+  border-radius: 5px;
+}
+
+.sidebar .nav-link:hover {
+  background: #f1f5f9;
+}
+
+
+/* =========================
+   COMPOSE
+========================= */
+
+.compose-container {
+  padding: 30px;
+}
+
+.compose-card {
+  border: none;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.compose-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  border-bottom: 1px solid #eee;
+  padding: 15px 20px;
+}
+
+.compose-card .card-body {
+  padding: 25px;
+}
+
+.compose-footer {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 20px;
+}
+
+.compose-footer button {
+  min-width: 90px;
+  border-radius: 5px;
+}
+
+.text-editor {
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+
+/* =========================
+   WELCOME
+========================= */
+
+.welcome-area {
+  min-height: calc(100vh - 76px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.welcome-card {
+  width: 430px;
+  text-align: center;
+  padding: 30px;
+  border-radius: 4px;
+}
+
+.welcome-card h1 {
+  font-size: 28px;
+  margin-bottom: 12px;
+}
+
+.welcome-card p {
+  color: #666;
+  margin-bottom: 25px;
+}
+
+.compose-main-button {
+  width: 100%;
+  border-radius: 25px;
+  padding: 9px;
+}
+
+.logout-button {
+  width: 100%;
+  border-radius: 25px;
+  padding: 9px;
+}
+
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 768px) {
+
+  .sidebar {
+    width: 170px;
+  }
+
+  .compose-container {
+    padding: 15px;
+  }
+
+  .main-navbar {
+    padding: 0 15px;
+  }
+
+}
