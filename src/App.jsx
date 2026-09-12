@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React,  { useState } from 'react';
 import { Alert, Button, Card, Container, Form, Nav, Navbar, Spinner, Stack } from 'react-bootstrap';
 import { createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { auth } from './firebase';
