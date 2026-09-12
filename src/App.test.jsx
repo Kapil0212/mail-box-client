@@ -1,142 +1,222 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 
 import App from './App';
 
+const signInMock = vi.fn();
+const getIdTokenMock = vi.fn();
+const signOutMock = vi.fn();
+
 vi.mock('firebase/auth', () => ({
   createUserWithEmailAndPassword: vi.fn(),
-  signOut: vi.fn(),
+  signInWithEmailAndPassword: (...args) => signInMock(...args),
+  getIdToken: (...args) => getIdTokenMock(...args),
+  signOut: (...args) => signOutMock(...args),
 }));
 
 vi.mock('./firebase', () => ({
   auth: {},
 }));
 
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-
-describe('Signup Component', () => {
+describe('Login Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.clear();
   });
 
   // Test Case 1
-  it('should display the signup form', () => {
+  it('should display the login screen', () => {
     render(<App />);
 
-    expect(screen.getByText('SignUp')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Email')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Password')).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /have an account\? login/i,
+      })
+    );
+
     expect(
-      screen.getByPlaceholderText('Confirm Password')
+      screen.getByRole('heading', { name: 'Login' })
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByPlaceholderText('Email')
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByPlaceholderText('Password')
     ).toBeInTheDocument();
   });
 
   // Test Case 2
-  it('should show an error when fields are empty', async () => {
-    const user = userEvent.setup();
-
+  it('should show error when login fields are empty', () => {
     render(<App />);
 
-    await user.click(screen.getByRole('button', { name: 'Sign up' }));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /have an account\? login/i,
+      })
+    );
+
+    const form = screen
+      .getByPlaceholderText('Email')
+      .closest('form');
+
+    fireEvent.submit(form);
 
     expect(
-      screen.getByText('Please fill in all fields.')
+      screen.getByText('Please enter email and password.')
     ).toBeInTheDocument();
+
+    expect(signInMock).not.toHaveBeenCalled();
   });
 
   // Test Case 3
-  it('should show an error when passwords do not match', async () => {
-    const user = userEvent.setup();
+  it('should show error for wrong credentials', async () => {
+    signInMock.mockRejectedValue({
+      code: 'auth/invalid-credential',
+    });
+
+    vi.spyOn(window, 'alert').mockImplementation(() => {});
 
     render(<App />);
 
-    await user.type(
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /have an account\? login/i,
+      })
+    );
+
+    fireEvent.change(
       screen.getByPlaceholderText('Email'),
-      'test@example.com'
+      {
+        target: { value: 'wrong@example.com' },
+      }
     );
 
-    await user.type(
+    fireEvent.change(
       screen.getByPlaceholderText('Password'),
-      'password123'
+      {
+        target: { value: 'wrongpassword' },
+      }
     );
 
-    await user.type(
-      screen.getByPlaceholderText('Confirm Password'),
-      'password456'
+    const form = screen
+      .getByPlaceholderText('Email')
+      .closest('form');
+
+    fireEvent.submit(form);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('Invalid email or password.')
+      ).toBeInTheDocument();
+    });
+
+    expect(window.alert).toHaveBeenCalledWith(
+      'Invalid email or password.'
     );
-
-    await user.click(screen.getByRole('button', { name: 'Sign up' }));
-
-    expect(
-      screen.getByText('Passwords do not match.')
-    ).toBeInTheDocument();
   });
 
   // Test Case 4
-  it('should successfully create an account with valid details', async () => {
-    const user = userEvent.setup();
+  it('should login successfully with valid credentials', async () => {
+    const mockUser = {
+      uid: 'test-user-id',
+      email: 'test@example.com',
+    };
 
-    createUserWithEmailAndPassword.mockResolvedValue({
-      user: {
-        uid: 'test-user-id',
-      },
+    signInMock.mockResolvedValue({
+      user: mockUser,
     });
+
+    getIdTokenMock.mockResolvedValue(
+      'test-firebase-token'
+    );
 
     render(<App />);
 
-    await user.type(
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /have an account\? login/i,
+      })
+    );
+
+    fireEvent.change(
       screen.getByPlaceholderText('Email'),
-      'test@example.com'
+      {
+        target: { value: 'test@example.com' },
+      }
     );
 
-    await user.type(
+    fireEvent.change(
       screen.getByPlaceholderText('Password'),
-      'password123'
+      {
+        target: { value: 'password123' },
+      }
     );
 
-    await user.type(
-      screen.getByPlaceholderText('Confirm Password'),
-      'password123'
-    );
+    const form = screen
+      .getByPlaceholderText('Email')
+      .closest('form');
 
-    await user.click(screen.getByRole('button', { name: 'Sign up' }));
-
-    expect(createUserWithEmailAndPassword).toHaveBeenCalled();
-  });
-
-  // Test Case 5
-  it('should display Firebase error when email already exists', async () => {
-    const user = userEvent.setup();
-
-    createUserWithEmailAndPassword.mockRejectedValue({
-      code: 'auth/email-already-in-use',
-    });
-
-    render(<App />);
-
-    await user.type(
-      screen.getByPlaceholderText('Email'),
-      'existing@example.com'
-    );
-
-    await user.type(
-      screen.getByPlaceholderText('Password'),
-      'password123'
-    );
-
-    await user.type(
-      screen.getByPlaceholderText('Confirm Password'),
-      'password123'
-    );
-
-    await user.click(screen.getByRole('button', { name: 'Sign up' }));
+    fireEvent.submit(form);
 
     expect(
       await screen.findByText(
-        'An account already exists with this email address.'
+        'Welcome to your mail box'
       )
     ).toBeInTheDocument();
+
+    expect(signInMock).toHaveBeenCalled();
+  });
+
+  // Test Case 5
+  it('should store Firebase ID token after successful login', async () => {
+    const mockUser = {
+      uid: 'test-user-id',
+      email: 'test@example.com',
+    };
+
+    signInMock.mockResolvedValue({
+      user: mockUser,
+    });
+
+    getIdTokenMock.mockResolvedValue(
+      'test-firebase-token'
+    );
+
+    render(<App />);
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /have an account\? login/i,
+      })
+    );
+
+    fireEvent.change(
+      screen.getByPlaceholderText('Email'),
+      {
+        target: { value: 'test@example.com' },
+      }
+    );
+
+    fireEvent.change(
+      screen.getByPlaceholderText('Password'),
+      {
+        target: { value: 'password123' },
+      }
+    );
+
+    const form = screen
+      .getByPlaceholderText('Email')
+      .closest('form');
+
+    fireEvent.submit(form);
+
+    await waitFor(() => {
+      expect(
+        localStorage.getItem('idToken')
+      ).toBe('test-firebase-token');
+    });
   });
 });
