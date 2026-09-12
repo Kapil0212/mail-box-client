@@ -132,17 +132,14 @@ const ComposeMail = ({ onClose }) => {
                   <Form.Label>
                     To
                   </Form.Label>
-
-                  <Form.Control
-                    type="email"
-                    placeholder="Enter receiver email"
-                    value={receiverEmail}
-                    onChange={(e) =>
-                      setReceiverEmail(e.target.value)
-                    }
-                    required
-                  />
-
+<Form.Control
+  type="email"
+  placeholder="Enter receiver email"
+  value={receiverEmail}
+  onChange={(e) =>
+    setReceiverEmail(e.target.value)
+  }
+/>npx vitest run
                 </Form.Group>
 
                 <Form.Group className="mb-3">
@@ -151,15 +148,14 @@ const ComposeMail = ({ onClose }) => {
                     Subject
                   </Form.Label>
 
-                  <Form.Control
-                    type="text"
-                    placeholder="Subject"
-                    value={subject}
-                    onChange={(e) =>
-                      setSubject(e.target.value)
-                    }
-                    required
-                  />
+                 <Form.Control
+  type="text"
+  placeholder="Subject"
+  value={subject}
+  onChange={(e) =>
+    setSubject(e.target.value)
+  }
+/>
 
                 </Form.Group>
 
