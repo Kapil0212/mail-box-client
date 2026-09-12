@@ -156,3 +156,54 @@ body { margin: 0; overflow-x: hidden; }
   .blue-shape { width: 520px; height: 300px; min-width: 0; }
   .signup-stack { margin-top: 25px; }
 }
+.login-card {
+  min-height: 225px;
+}
+
+.forgot-password {
+  text-align: center;
+  margin-top: 6px;
+  font-size: 12px;
+}
+
+.forgot-password a {
+  color: #6c63a8;
+}
+
+.welcome-area {
+  min-height: calc(100vh - 76px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+}
+
+.welcome-card {
+  width: 430px;
+  text-align: center;
+  padding: 30px;
+  border-radius: 4px;
+}
+
+.welcome-card h1 {
+  font-size: 28px;
+  margin-bottom: 12px;
+}
+
+.welcome-card p {
+  color: #666;
+  margin-bottom: 25px;
+}
+
+.logout-button {
+  width: 100%;
+  border-radius: 25px;
+  background: #0d8fe9;
+  border: none;
+  padding: 9px;
+}
+
+.logout-button:hover {
+  background: #087dcc;
+}
