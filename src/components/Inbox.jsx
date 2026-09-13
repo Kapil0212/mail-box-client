@@ -1,4 +1,5 @@
 import React, { useEffect, useReducer, useState } from 'react';
+
 import {
   Container,
   Row,
@@ -11,6 +12,7 @@ import {
 
 import {
   getInboxMails,
+  getSentMails,
   markMailAsRead,
   deleteMail,
 } from '../services/mailService';
@@ -25,6 +27,7 @@ const initialState = {
 
 const inboxReducer = (state, action) => {
   switch (action.type) {
+
     case 'FETCH_START':
       return {
         ...state,
@@ -73,56 +76,89 @@ const inboxReducer = (state, action) => {
   }
 };
 
-const Inbox = ({ onUnreadCountChange }) => {
+const Inbox = ({
+  mailboxType = 'inbox',
+  onUnreadCountChange,
+}) => {
+
   const [state, dispatch] = useReducer(
     inboxReducer,
     initialState
   );
 
-  const [selectedMail, setSelectedMail] = useState(null);
-  const [showCompose, setShowCompose] = useState(false);
+  const [selectedMail, setSelectedMail] =
+    useState(null);
+
+  const [showCompose, setShowCompose] =
+    useState(false);
+
+  const isSentBox = mailboxType === 'sent';
 
   const loadInbox = async () => {
     try {
+
       dispatch({
         type: 'FETCH_START',
       });
 
-      const inboxMails = await getInboxMails();
+      const mails = isSentBox
+        ? await getSentMails()
+        : await getInboxMails();
 
       dispatch({
         type: 'FETCH_SUCCESS',
-        payload: inboxMails,
+        payload: mails,
       });
+
     } catch (error) {
-      console.error('Inbox error:', error);
+
+      console.error(
+        'Mailbox error:',
+        error
+      );
 
       dispatch({
         type: 'FETCH_ERROR',
         payload:
-          error.message || 'Unable to load inbox.',
+          error.message ||
+          'Unable to load mails.',
       });
     }
   };
 
   useEffect(() => {
     loadInbox();
-  }, []);
+  }, [mailboxType]);
 
-  const unreadCount = state.mails.filter(
-    (mail) => mail.read !== true
-  ).length;
+  const unreadCount = isSentBox
+    ? 0
+    : state.mails.filter(
+        (mail) => mail.read !== true
+      ).length;
 
   useEffect(() => {
-    if (onUnreadCountChange) {
+
+    if (
+      onUnreadCountChange &&
+      !isSentBox
+    ) {
       onUnreadCountChange(unreadCount);
     }
-  }, [unreadCount, onUnreadCountChange]);
+
+  }, [
+    unreadCount,
+    onUnreadCountChange,
+    isSentBox,
+  ]);
 
   const getMessagePreview = (message) => {
-    if (!message) return '';
+
+    if (!message) {
+      return '';
+    }
 
     if (typeof message === 'object') {
+
       if (Array.isArray(message.blocks)) {
         return message.blocks
           .map((block) => block.text || '')
@@ -137,9 +173,13 @@ const Inbox = ({ onUnreadCountChange }) => {
   };
 
   const getFullMessage = (message) => {
-    if (!message) return '';
+
+    if (!message) {
+      return '';
+    }
 
     if (typeof message === 'object') {
+
       if (Array.isArray(message.blocks)) {
         return message.blocks
           .map((block) => block.text || '')
@@ -154,7 +194,10 @@ const Inbox = ({ onUnreadCountChange }) => {
   };
 
   const formatDate = (date) => {
-    if (!date) return '';
+
+    if (!date) {
+      return '';
+    }
 
     const mailDate = new Date(date);
 
@@ -166,20 +209,27 @@ const Inbox = ({ onUnreadCountChange }) => {
   };
 
   const handleMailClick = async (mail) => {
+
     setSelectedMail(mail);
 
-    if (mail.read === true) {
+    if (
+      isSentBox ||
+      mail.read === true
+    ) {
       return;
     }
 
     try {
+
       await markMailAsRead(mail.id);
 
       dispatch({
         type: 'MARK_AS_READ',
         payload: mail.id,
       });
+
     } catch (error) {
+
       console.error(
         'Failed to mark mail as read:',
         error
@@ -188,7 +238,9 @@ const Inbox = ({ onUnreadCountChange }) => {
   };
 
   const handleDeleteMail = async (mailId) => {
+
     try {
+
       await deleteMail(mailId);
 
       dispatch({
@@ -202,7 +254,9 @@ const Inbox = ({ onUnreadCountChange }) => {
       ) {
         setSelectedMail(null);
       }
+
     } catch (error) {
+
       console.error(
         'Delete mail error:',
         error
@@ -218,11 +272,16 @@ const Inbox = ({ onUnreadCountChange }) => {
   };
 
   if (showCompose) {
+
     return (
       <Container fluid className="py-4">
+
         <Row className="justify-content-center">
+
           <Col md={10} lg={9}>
+
             <div className="d-flex justify-content-between align-items-center mb-3">
+
               <h4 className="mb-0">
                 Compose Mail
               </h4>
@@ -233,45 +292,58 @@ const Inbox = ({ onUnreadCountChange }) => {
                   setShowCompose(false)
                 }
               >
-                Back to Inbox
+                Back to Mailbox
               </Button>
+
             </div>
 
             <ComposeMail />
+
           </Col>
+
         </Row>
+
       </Container>
     );
   }
 
   if (selectedMail) {
+
     return (
       <Container fluid className="py-4">
+
         <Row className="justify-content-center">
+
           <Col md={10} lg={9}>
+
             <div className="d-flex justify-content-between align-items-center mb-3">
+
               <Button
                 variant="outline-secondary"
                 onClick={() =>
                   setSelectedMail(null)
                 }
               >
-                ← Back to Inbox
+                ← Back to {isSentBox ? 'Sent' : 'Inbox'}
               </Button>
 
-              <Button
-                variant="danger"
-                onClick={() =>
-                  handleDeleteMail(
-                    selectedMail.id
-                  )
-                }
-              >
-                Delete
-              </Button>
+              {!isSentBox && (
+                <Button
+                  variant="danger"
+                  onClick={() =>
+                    handleDeleteMail(
+                      selectedMail.id
+                    )
+                  }
+                >
+                  Delete
+                </Button>
+              )}
+
             </div>
 
             <div className="border rounded bg-white p-4">
+
               <h4 className="mb-3">
                 {selectedMail.subject ||
                   '(No subject)'}
@@ -305,32 +377,47 @@ const Inbox = ({ onUnreadCountChange }) => {
                   selectedMail.message
                 )}
               </div>
+
             </div>
+
           </Col>
+
         </Row>
+
       </Container>
     );
   }
 
   return (
     <Container fluid className="py-4">
+
       <Row>
+
         <Col>
+
           <div className="d-flex justify-content-between align-items-center mb-3">
+
             <div>
+
               <h3 className="mb-1">
-                Inbox
+                {isSentBox
+                  ? 'Sent Mail'
+                  : 'Inbox'}
               </h3>
 
-              <small className="text-muted">
-                {unreadCount} unread message
-                {unreadCount !== 1
-                  ? 's'
-                  : ''}
-              </small>
+              {!isSentBox && (
+                <small className="text-muted">
+                  {unreadCount} unread message
+                  {unreadCount !== 1
+                    ? 's'
+                    : ''}
+                </small>
+              )}
+
             </div>
 
             <div className="d-flex gap-2">
+
               <Button
                 variant="outline-primary"
                 onClick={loadInbox}
@@ -347,7 +434,9 @@ const Inbox = ({ onUnreadCountChange }) => {
               >
                 Compose
               </Button>
+
             </div>
+
           </div>
 
           {state.error && (
@@ -357,21 +446,33 @@ const Inbox = ({ onUnreadCountChange }) => {
           )}
 
           {state.loading ? (
+
             <div className="text-center py-5">
+
               <Spinner animation="border" />
 
               <div className="mt-2">
-                Loading inbox...
+                Loading{' '}
+                {isSentBox
+                  ? 'sent mails'
+                  : 'inbox'}
+                ...
               </div>
+
             </div>
+
           ) : state.mails.length === 0 ? (
+
             <div className="text-center py-5 border rounded bg-light">
+
               <h5>
                 No mails found
               </h5>
 
               <p className="text-muted mb-3">
-                Your inbox is empty.
+                {isSentBox
+                  ? 'You have not sent any mails yet.'
+                  : 'Your inbox is empty.'}
               </p>
 
               <Button
@@ -382,37 +483,48 @@ const Inbox = ({ onUnreadCountChange }) => {
               >
                 Compose Mail
               </Button>
+
             </div>
+
           ) : (
+
             <ListGroup>
+
               {state.mails.map((mail) => (
+
                 <ListGroup.Item
                   key={mail.id}
                   className="py-3"
                 >
+
                   <Row className="align-items-center">
 
-                    <Col xs={1} md={1}>
-                      {mail.read !== true && (
-                        <span
-                          style={{
-                            display:
-                              'inline-block',
-                            width: '10px',
-                            height: '10px',
-                            borderRadius:
-                              '50%',
-                            backgroundColor:
-                              '#0d6efd',
-                          }}
-                        />
-                      )}
-                    </Col>
+                    {!isSentBox && (
+                      <Col xs={1} md={1}>
+
+                        {mail.read !== true && (
+                          <span
+                            style={{
+                              display:
+                                'inline-block',
+                              width: '10px',
+                              height: '10px',
+                              borderRadius:
+                                '50%',
+                              backgroundColor:
+                                '#0d6efd',
+                            }}
+                          />
+                        )}
+
+                      </Col>
+                    )}
 
                     <Col
-                      xs={11}
-                      md={3}
+                      xs={isSentBox ? 12 : 11}
+                      md={isSentBox ? 4 : 3}
                       className={
+                        !isSentBox &&
                         mail.read !== true
                           ? 'fw-bold'
                           : ''
@@ -424,13 +536,16 @@ const Inbox = ({ onUnreadCountChange }) => {
                         cursor: 'pointer',
                       }}
                     >
-                      {mail.senderEmail}
+                      {isSentBox
+                        ? `To: ${mail.receiverEmail}`
+                        : mail.senderEmail}
                     </Col>
 
                     <Col
                       xs={12}
                       md={3}
                       className={
+                        !isSentBox &&
                         mail.read !== true
                           ? 'fw-bold'
                           : ''
@@ -472,31 +587,40 @@ const Inbox = ({ onUnreadCountChange }) => {
                       )}
                     </Col>
 
-                    <Col
-                      xs={12}
-                      md={1}
-                      className="text-md-end mt-2 mt-md-0"
-                    >
-                      <Button
-                        variant="outline-danger"
-                        size="sm"
-                        onClick={() =>
-                          handleDeleteMail(
-                            mail.id
-                          )
-                        }
+                    {!isSentBox && (
+                      <Col
+                        xs={12}
+                        md={1}
+                        className="text-md-end mt-2 mt-md-0"
                       >
-                        Delete
-                      </Button>
-                    </Col>
+                        <Button
+                          variant="outline-danger"
+                          size="sm"
+                          onClick={() =>
+                            handleDeleteMail(
+                              mail.id
+                            )
+                          }
+                        >
+                          Delete
+                        </Button>
+                      </Col>
+                    )}
 
                   </Row>
+
                 </ListGroup.Item>
+
               ))}
+
             </ListGroup>
+
           )}
+
         </Col>
+
       </Row>
+
     </Container>
   );
 };

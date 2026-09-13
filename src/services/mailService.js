@@ -141,6 +141,57 @@ export const getInboxMails = async () => {
   return mails;
 };
 
+export const getSentMails = async () => {
+  const user = auth.currentUser;
+
+  if (!user) {
+    throw new Error('User is not logged in.');
+  }
+
+  const token = await getIdToken(user);
+
+  const databaseUrl = import.meta.env.VITE_FIREBASE_DATABASE_URL;
+
+  if (!databaseUrl) {
+    throw new Error('Firebase database URL is missing.');
+  }
+
+  const emailKey = getEmailKey(user.email);
+
+  const sentUrl =
+    `${databaseUrl}/mailboxes/${emailKey}/sent.json?auth=${token}`;
+
+  const response = await fetch(sentUrl);
+
+  if (!response.ok) {
+    const errorText = await response.text();
+
+    throw new Error(
+      `Failed to fetch sent mails: ${response.status} ${errorText}`
+    );
+  }
+
+  const data = await response.json();
+
+  if (!data) {
+    return [];
+  }
+
+  const mails = Object.entries(data).map(
+    ([id, mail]) => ({
+      id,
+      ...mail,
+    })
+  );
+
+  mails.sort(
+    (a, b) =>
+      new Date(b.createdAt) -
+      new Date(a.createdAt)
+  );
+
+  return mails;
+};
 
 // Mark Mail As Read
 export const markMailAsRead = async (mailId) => {

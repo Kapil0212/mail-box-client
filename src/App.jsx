@@ -17,7 +17,8 @@ const App = () => {
   const isMailbox =
     screen === 'welcome' ||
     screen === 'compose' ||
-    screen === 'inbox';
+    screen === 'inbox' ||
+    screen === 'sent';
 
   const handleCompose = () => {
     setScreen('compose');
@@ -25,6 +26,10 @@ const App = () => {
 
   const handleInbox = () => {
     setScreen('inbox');
+  };
+
+  const handleSent = () => {
+    setScreen('sent');
   };
 
   return (
@@ -35,11 +40,15 @@ const App = () => {
       />
 
       {screen === 'signup' && (
-        <Signup setScreen={setScreen} />
+        <Signup
+          setScreen={setScreen}
+        />
       )}
 
       {screen === 'login' && (
-        <Login setScreen={setScreen} />
+        <Login
+          setScreen={setScreen}
+        />
       )}
 
       {isMailbox && (
@@ -48,6 +57,7 @@ const App = () => {
           <Sidebar
             onCompose={handleCompose}
             onInbox={handleInbox}
+            onSent={handleSent}
             unreadCount={unreadCount}
           />
 
@@ -69,9 +79,16 @@ const App = () => {
 
             {screen === 'inbox' && (
               <Inbox
+                mailboxType="inbox"
                 onUnreadCountChange={
                   setUnreadCount
                 }
+              />
+            )}
+
+            {screen === 'sent' && (
+              <Inbox
+                mailboxType="sent"
               />
             )}
 
@@ -79,6 +96,7 @@ const App = () => {
 
         </div>
       )}
+
     </>
   );
 };

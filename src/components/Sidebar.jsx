@@ -1,8 +1,9 @@
-import { Button, Nav } from 'react-bootstrap';
+import { Button } from 'react-bootstrap';
 
 const Sidebar = ({
   onCompose,
   onInbox,
+  onSent,
   unreadCount = 0,
 }) => {
   return (
@@ -15,28 +16,31 @@ const Sidebar = ({
         ✎ Compose
       </Button>
 
-      <Nav className="flex-column mt-4">
+      <div className="mt-4">
 
-        <Nav.Link
+        <button
+          type="button"
           onClick={onInbox}
-          style={{ cursor: 'pointer' }}
+          className="btn btn-link text-start text-decoration-none w-100"
         >
           📥 Inbox
 
           {unreadCount > 0 && (
-            <span
-              className="ms-2 text-muted fw-bold"
-            >
+            <span className="ms-2 text-muted fw-bold">
               {unreadCount}
             </span>
           )}
-        </Nav.Link>
+        </button>
 
-        <Nav.Link>
+        <button
+          type="button"
+          onClick={onSent}
+          className="btn btn-link text-start text-decoration-none w-100"
+        >
           📤 Sent
-        </Nav.Link>
+        </button>
 
-      </Nav>
+      </div>
 
     </div>
   );
