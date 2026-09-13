@@ -25,6 +25,25 @@ const initialState = {
   error: '',
 };
 
+const areMailsEqual = (oldMails, newMails) => {
+  if (oldMails.length !== newMails.length) {
+    return false;
+  }
+
+  return oldMails.every((oldMail, index) => {
+    const newMail = newMails[index];
+
+    if (!newMail) {
+      return false;
+    }
+
+    return (
+      oldMail.id === newMail.id &&
+      oldMail.read === newMail.read
+    );
+  });
+};
+
 const inboxReducer = (state, action) => {
   switch (action.type) {
 
@@ -35,13 +54,27 @@ const inboxReducer = (state, action) => {
         error: '',
       };
 
-    case 'FETCH_SUCCESS':
+    case 'FETCH_SUCCESS': {
+      const newMails = action.payload;
+
+      /*
+       * If mails have not changed, return the same state.
+       * This avoids unnecessary React re-renders during polling.
+       */
+      if (
+        !state.loading &&
+        areMailsEqual(state.mails, newMails)
+      ) {
+        return state;
+      }
+
       return {
         ...state,
-        mails: action.payload,
+        mails: newMails,
         loading: false,
         error: '',
       };
+    }
 
     case 'FETCH_ERROR':
       return {
@@ -94,12 +127,11 @@ const Inbox = ({
 
   const isSentBox = mailboxType === 'sent';
 
+  /*
+   * Fetch mails from Firebase.
+   */
   const loadInbox = async () => {
     try {
-
-      dispatch({
-        type: 'FETCH_START',
-      });
 
       const mails = isSentBox
         ? await getSentMails()
@@ -126,16 +158,71 @@ const Inbox = ({
     }
   };
 
+  /*
+   * Realtime mail polling.
+   *
+   * First fetch happens immediately.
+   * After that, mails are fetched every 2 seconds.
+   *
+   * The interval is cleared when the component
+   * is unmounted or mailbox type changes.
+   */
   useEffect(() => {
-    loadInbox();
+
+    let isFetching = false;
+
+    const fetchMails = async () => {
+
+      /*
+       * Prevent overlapping API requests if
+       * the previous request is still running.
+       */
+      if (isFetching) {
+        return;
+      }
+
+      isFetching = true;
+
+      try {
+        await loadInbox();
+      } finally {
+        isFetching = false;
+      }
+    };
+
+    /*
+     * Initial fetch.
+     */
+    fetchMails();
+
+    /*
+     * Fetch every 2 seconds.
+     */
+    const interval = setInterval(() => {
+      fetchMails();
+    }, 2000);
+
+    /*
+     * Cleanup interval.
+     */
+    return () => {
+      clearInterval(interval);
+    };
+
   }, [mailboxType]);
 
+  /*
+   * Calculate unread mails.
+   */
   const unreadCount = isSentBox
     ? 0
     : state.mails.filter(
         (mail) => mail.read !== true
       ).length;
 
+  /*
+   * Update unread count in Sidebar.
+   */
   useEffect(() => {
 
     if (
@@ -151,6 +238,9 @@ const Inbox = ({
     isSentBox,
   ]);
 
+  /*
+   * Get short message preview.
+   */
   const getMessagePreview = (message) => {
 
     if (!message) {
@@ -160,6 +250,7 @@ const Inbox = ({
     if (typeof message === 'object') {
 
       if (Array.isArray(message.blocks)) {
+
         return message.blocks
           .map((block) => block.text || '')
           .join(' ')
@@ -172,6 +263,9 @@ const Inbox = ({
     return String(message);
   };
 
+  /*
+   * Get complete message.
+   */
   const getFullMessage = (message) => {
 
     if (!message) {
@@ -181,6 +275,7 @@ const Inbox = ({
     if (typeof message === 'object') {
 
       if (Array.isArray(message.blocks)) {
+
         return message.blocks
           .map((block) => block.text || '')
           .join('\n')
@@ -193,6 +288,9 @@ const Inbox = ({
     return String(message);
   };
 
+  /*
+   * Format mail date.
+   */
   const formatDate = (date) => {
 
     if (!date) {
@@ -208,10 +306,16 @@ const Inbox = ({
     return mailDate.toLocaleString();
   };
 
+  /*
+   * Open mail.
+   */
   const handleMailClick = async (mail) => {
 
     setSelectedMail(mail);
 
+    /*
+     * Sent mails don't need read/unread handling.
+     */
     if (
       isSentBox ||
       mail.read === true
@@ -237,6 +341,9 @@ const Inbox = ({
     }
   };
 
+  /*
+   * Delete mail.
+   */
   const handleDeleteMail = async (mailId) => {
 
     try {
@@ -271,6 +378,9 @@ const Inbox = ({
     }
   };
 
+  /*
+   * Compose screen.
+   */
   if (showCompose) {
 
     return (
@@ -307,6 +417,9 @@ const Inbox = ({
     );
   }
 
+  /*
+   * Read mail screen.
+   */
   if (selectedMail) {
 
     return (
@@ -388,6 +501,9 @@ const Inbox = ({
     );
   }
 
+  /*
+   * Main Inbox / Sent screen.
+   */
   return (
     <Container fluid className="py-4">
 
@@ -593,6 +709,7 @@ const Inbox = ({
                         md={1}
                         className="text-md-end mt-2 mt-md-0"
                       >
+
                         <Button
                           variant="outline-danger"
                           size="sm"
@@ -604,6 +721,7 @@ const Inbox = ({
                         >
                           Delete
                         </Button>
+
                       </Col>
                     )}
 
