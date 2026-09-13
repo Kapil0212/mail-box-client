@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useReducer, useState } from 'react';
 import {
   Container,
   Row,
@@ -9,31 +9,88 @@ import {
   Alert,
 } from 'react-bootstrap';
 
-import { getInboxMails } from '../services/mailService';
+import {
+  getInboxMails,
+  markMailAsRead,
+} from '../services/mailService';
+
 import ComposeMail from './ComposeMail';
 
-const Inbox = () => {
-  const [mails, setMails] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+const initialState = {
+  mails: [],
+  loading: true,
+  error: '',
+};
+
+const inboxReducer = (state, action) => {
+  switch (action.type) {
+    case 'FETCH_START':
+      return {
+        ...state,
+        loading: true,
+        error: '',
+      };
+
+    case 'FETCH_SUCCESS':
+      return {
+        ...state,
+        mails: action.payload,
+        loading: false,
+        error: '',
+      };
+
+    case 'FETCH_ERROR':
+      return {
+        ...state,
+        loading: false,
+        error: action.payload,
+      };
+
+    case 'MARK_AS_READ':
+      return {
+        ...state,
+        mails: state.mails.map((mail) =>
+          mail.id === action.payload
+            ? {
+                ...mail,
+                read: true,
+              }
+            : mail
+        ),
+      };
+
+    default:
+      return state;
+  }
+};
+
+const Inbox = ({ onUnreadCountChange }) => {
+  const [state, dispatch] = useReducer(
+    inboxReducer,
+    initialState
+  );
+
+  const [selectedMail, setSelectedMail] = useState(null);
   const [showCompose, setShowCompose] = useState(false);
 
   const loadInbox = async () => {
     try {
-      setLoading(true);
-      setError('');
+      dispatch({ type: 'FETCH_START' });
 
       const inboxMails = await getInboxMails();
 
-      setMails(inboxMails);
-    } catch (err) {
-      console.error('Inbox error:', err);
+      dispatch({
+        type: 'FETCH_SUCCESS',
+        payload: inboxMails,
+      });
+    } catch (error) {
+      console.error('Inbox error:', error);
 
-      setError(
-        err.message || 'Unable to load inbox.'
-      );
-    } finally {
-      setLoading(false);
+      dispatch({
+        type: 'FETCH_ERROR',
+        payload:
+          error.message || 'Unable to load inbox.',
+      });
     }
   };
 
@@ -41,26 +98,19 @@ const Inbox = () => {
     loadInbox();
   }, []);
 
-  const formatDate = (date) => {
-    if (!date) {
-      return '';
+  const unreadCount = state.mails.filter(
+    (mail) => mail.read !== true
+  ).length;
+
+  useEffect(() => {
+    if (onUnreadCountChange) {
+      onUnreadCountChange(unreadCount);
     }
-
-    const mailDate = new Date(date);
-
-    if (Number.isNaN(mailDate.getTime())) {
-      return '';
-    }
-
-    return mailDate.toLocaleString();
-  };
+  }, [unreadCount, onUnreadCountChange]);
 
   const getMessagePreview = (message) => {
-    if (!message) {
-      return '';
-    }
+    if (!message) return '';
 
-    // Draft.js raw content
     if (typeof message === 'object') {
       if (Array.isArray(message.blocks)) {
         return message.blocks
@@ -73,6 +123,57 @@ const Inbox = () => {
     }
 
     return String(message);
+  };
+
+  const getFullMessage = (message) => {
+    if (!message) return '';
+
+    if (typeof message === 'object') {
+      if (Array.isArray(message.blocks)) {
+        return message.blocks
+          .map((block) => block.text || '')
+          .join('\n')
+          .trim();
+      }
+
+      return '';
+    }
+
+    return String(message);
+  };
+
+  const formatDate = (date) => {
+    if (!date) return '';
+
+    const mailDate = new Date(date);
+
+    if (Number.isNaN(mailDate.getTime())) {
+      return '';
+    }
+
+    return mailDate.toLocaleString();
+  };
+
+  const handleMailClick = async (mail) => {
+    setSelectedMail(mail);
+
+    if (mail.read === true) {
+      return;
+    }
+
+    try {
+      await markMailAsRead(mail.id);
+
+      dispatch({
+        type: 'MARK_AS_READ',
+        payload: mail.id,
+      });
+    } catch (error) {
+      console.error(
+        'Failed to mark mail as read:',
+        error
+      );
+    }
   };
 
   if (showCompose) {
@@ -98,6 +199,56 @@ const Inbox = () => {
     );
   }
 
+  if (selectedMail) {
+    return (
+      <Container fluid className="py-4">
+        <Row className="justify-content-center">
+          <Col md={10} lg={9}>
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <Button
+                variant="outline-secondary"
+                onClick={() => setSelectedMail(null)}
+              >
+                ← Back to Inbox
+              </Button>
+            </div>
+
+            <div className="border rounded bg-white p-4">
+              <h4 className="mb-3">
+                {selectedMail.subject || '(No subject)'}
+              </h4>
+
+              <hr />
+
+              <div className="mb-3">
+                <strong>From:</strong>{' '}
+                {selectedMail.senderEmail}
+              </div>
+
+              <div className="mb-3">
+                <strong>To:</strong>{' '}
+                {selectedMail.receiverEmail}
+              </div>
+
+              <div className="text-muted small mb-4">
+                {formatDate(selectedMail.createdAt)}
+              </div>
+
+              <div
+                style={{
+                  whiteSpace: 'pre-wrap',
+                  lineHeight: '1.7',
+                }}
+              >
+                {getFullMessage(selectedMail.message)}
+              </div>
+            </div>
+          </Col>
+        </Row>
+      </Container>
+    );
+  }
+
   return (
     <Container fluid className="py-4">
       <Row>
@@ -107,7 +258,8 @@ const Inbox = () => {
               <h3 className="mb-1">Inbox</h3>
 
               <small className="text-muted">
-                Received mails
+                {unreadCount} unread message
+                {unreadCount !== 1 ? 's' : ''}
               </small>
             </div>
 
@@ -115,7 +267,7 @@ const Inbox = () => {
               <Button
                 variant="outline-primary"
                 onClick={loadInbox}
-                disabled={loading}
+                disabled={state.loading}
               >
                 Refresh
               </Button>
@@ -129,16 +281,13 @@ const Inbox = () => {
             </div>
           </div>
 
-          {error && (
-            <Alert
-              variant="danger"
-              className="mb-3"
-            >
-              {error}
+          {state.error && (
+            <Alert variant="danger">
+              {state.error}
             </Alert>
           )}
 
-          {loading ? (
+          {state.loading ? (
             <div className="text-center py-5">
               <Spinner animation="border" />
 
@@ -146,7 +295,7 @@ const Inbox = () => {
                 Loading inbox...
               </div>
             </div>
-          ) : mails.length === 0 ? (
+          ) : state.mails.length === 0 ? (
             <div className="text-center py-5 border rounded bg-light">
               <h5>No mails found</h5>
 
@@ -163,16 +312,38 @@ const Inbox = () => {
             </div>
           ) : (
             <ListGroup>
-              {mails.map((mail) => (
+              {state.mails.map((mail) => (
                 <ListGroup.Item
                   key={mail.id}
+                  action
+                  onClick={() => handleMailClick(mail)}
                   className="py-3"
+                  style={{ cursor: 'pointer' }}
                 >
                   <Row className="align-items-center">
+
+                    <Col xs={1} md={1}>
+                      {mail.read !== true && (
+                        <span
+                          style={{
+                            display: 'inline-block',
+                            width: '10px',
+                            height: '10px',
+                            borderRadius: '50%',
+                            backgroundColor: '#0d6efd',
+                          }}
+                        />
+                      )}
+                    </Col>
+
                     <Col
-                      xs={12}
+                      xs={11}
                       md={3}
-                      className="fw-semibold"
+                      className={
+                        mail.read !== true
+                          ? 'fw-bold'
+                          : ''
+                      }
                     >
                       {mail.senderEmail}
                     </Col>
@@ -180,15 +351,19 @@ const Inbox = () => {
                     <Col
                       xs={12}
                       md={3}
-                      className="fw-semibold"
+                      className={
+                        mail.read !== true
+                          ? 'fw-bold'
+                          : ''
+                      }
                     >
                       {mail.subject || '(No subject)'}
                     </Col>
 
                     <Col
                       xs={12}
-                      md={4}
-                      className="text-muted"
+                      md={3}
+                      className="text-muted text-truncate"
                     >
                       {getMessagePreview(
                         mail.message
@@ -200,10 +375,9 @@ const Inbox = () => {
                       md={2}
                       className="text-muted small text-md-end"
                     >
-                      {formatDate(
-                        mail.createdAt
-                      )}
+                      {formatDate(mail.createdAt)}
                     </Col>
+
                   </Row>
                 </ListGroup.Item>
               ))}

@@ -8,7 +8,7 @@ const getEmailKey = (email) => {
     .replace(/=/g, '');
 };
 
-// SEND MAIL
+// Send Mail
 export const sendMail = async ({
   receiverEmail,
   subject,
@@ -30,6 +30,7 @@ export const sendMail = async ({
     receiverEmail: receiver,
     subject: subject.trim(),
     message,
+    read: false,
     createdAt: new Date().toISOString(),
   };
 
@@ -39,7 +40,7 @@ export const sendMail = async ({
     throw new Error('Firebase database URL is missing.');
   }
 
-  // Save mail in receiver inbox
+  // Save in receiver inbox
   const receiverKey = getEmailKey(receiver);
 
   const inboxUrl =
@@ -61,7 +62,7 @@ export const sendMail = async ({
     );
   }
 
-  // Save mail in sender sentbox
+  // Save in sender sentbox
   const senderKey = getEmailKey(senderEmail);
 
   const sentUrl =
@@ -83,12 +84,11 @@ export const sendMail = async ({
     );
   }
 
-  return {
-    success: true,
-  };
+  return { success: true };
 };
 
-// GET RECEIVED MAILS
+
+// Get Inbox Mails
 export const getInboxMails = async () => {
   const user = auth.currentUser;
 
@@ -132,7 +132,6 @@ export const getInboxMails = async () => {
     })
   );
 
-  // Latest mails first
   mails.sort(
     (a, b) =>
       new Date(b.createdAt) -
@@ -140,4 +139,47 @@ export const getInboxMails = async () => {
   );
 
   return mails;
+};
+
+
+// Mark Mail As Read
+export const markMailAsRead = async (mailId) => {
+  const user = auth.currentUser;
+
+  if (!user) {
+    throw new Error('User is not logged in.');
+  }
+
+  const token = await getIdToken(user);
+
+  const databaseUrl = import.meta.env.VITE_FIREBASE_DATABASE_URL;
+
+  if (!databaseUrl) {
+    throw new Error('Firebase database URL is missing.');
+  }
+
+  const emailKey = getEmailKey(user.email);
+
+  const mailUrl =
+    `${databaseUrl}/mailboxes/${emailKey}/inbox/${mailId}.json?auth=${token}`;
+
+  const response = await fetch(mailUrl, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      read: true,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+
+    throw new Error(
+      `Failed to mark mail as read: ${response.status} ${errorText}`
+    );
+  }
+
+  return true;
 };

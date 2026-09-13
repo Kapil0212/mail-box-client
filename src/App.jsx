@@ -12,6 +12,8 @@ const App = () => {
 
   const [screen, setScreen] = useState(false);
 
+  const [unreadCount, setUnreadCount] = useState(0);
+
   const isMailbox =
     screen === 'welcome' ||
     screen === 'compose' ||
@@ -46,6 +48,7 @@ const App = () => {
           <Sidebar
             onCompose={handleCompose}
             onInbox={handleInbox}
+            unreadCount={unreadCount}
           />
 
           <main className="mailbox-content">
@@ -65,7 +68,11 @@ const App = () => {
             )}
 
             {screen === 'inbox' && (
-              <Inbox />
+              <Inbox
+                onUnreadCountChange={
+                  setUnreadCount
+                }
+              />
             )}
 
           </main>
