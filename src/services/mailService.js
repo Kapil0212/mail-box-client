@@ -183,3 +183,38 @@ export const markMailAsRead = async (mailId) => {
 
   return true;
 };
+
+export const deleteMail = async (mailId) => {
+  const user = auth.currentUser;
+
+  if (!user) {
+    throw new Error('User is not logged in.');
+  }
+
+  const token = await getIdToken(user);
+
+  const databaseUrl = import.meta.env.VITE_FIREBASE_DATABASE_URL;
+
+  if (!databaseUrl) {
+    throw new Error('Firebase database URL is missing.');
+  }
+
+  const emailKey = getEmailKey(user.email);
+
+  const mailUrl =
+    `${databaseUrl}/mailboxes/${emailKey}/inbox/${mailId}.json?auth=${token}`;
+
+  const response = await fetch(mailUrl, {
+    method: 'DELETE',
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+
+    throw new Error(
+      `Failed to delete mail: ${response.status} ${errorText}`
+    );
+  }
+
+  return true;
+};
