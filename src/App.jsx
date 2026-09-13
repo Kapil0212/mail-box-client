@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Inbox from './components/Inbox';
 
 import Navbar from './components/Navbar';
 import Signup from './components/Signup';
@@ -9,11 +10,20 @@ import ComposeMail from './components/ComposeMail';
 
 const App = () => {
 
-  const [screen, setScreen] = useState('signup');
+  const [screen, setScreen] = useState(false);
 
   const isMailbox =
     screen === 'welcome' ||
-    screen === 'compose';
+    screen === 'compose' ||
+    screen === 'inbox';
+
+  const handleCompose = () => {
+    setScreen('compose');
+  };
+
+  const handleInbox = () => {
+    setScreen('inbox');
+  };
 
   return (
     <>
@@ -34,9 +44,8 @@ const App = () => {
         <div className="mailbox-layout">
 
           <Sidebar
-            onCompose={() =>
-              setScreen('compose')
-            }
+            onCompose={handleCompose}
+            onInbox={handleInbox}
           />
 
           <main className="mailbox-content">
@@ -53,6 +62,10 @@ const App = () => {
                   setScreen('welcome')
                 }
               />
+            )}
+
+            {screen === 'inbox' && (
+              <Inbox />
             )}
 
           </main>

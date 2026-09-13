@@ -1,6 +1,6 @@
 import { Button, Nav } from 'react-bootstrap';
 
-const Sidebar = ({ onCompose }) => {
+const Sidebar = ({ onCompose, onInbox }) => {
   return (
     <div className="sidebar">
 
@@ -13,7 +13,7 @@ const Sidebar = ({ onCompose }) => {
 
       <Nav className="flex-column mt-4">
 
-        <Nav.Link>
+        <Nav.Link onClick={onInbox} style={{ cursor: 'pointer' }}>
           📥 Inbox
         </Nav.Link>
 

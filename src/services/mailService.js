@@ -8,6 +8,7 @@ const getEmailKey = (email) => {
     .replace(/=/g, '');
 };
 
+// SEND MAIL
 export const sendMail = async ({
   receiverEmail,
   subject,
@@ -21,13 +22,8 @@ export const sendMail = async ({
 
   const token = await getIdToken(user);
 
-  const senderEmail = user.email
-    .trim()
-    .toLowerCase();
-
-  const receiver = receiverEmail
-    .trim()
-    .toLowerCase();
+  const senderEmail = user.email.trim().toLowerCase();
+  const receiver = receiverEmail.trim().toLowerCase();
 
   const mail = {
     senderEmail,
@@ -37,73 +33,50 @@ export const sendMail = async ({
     createdAt: new Date().toISOString(),
   };
 
-  const databaseUrl =
-    import.meta.env.VITE_FIREBASE_DATABASE_URL;
+  const databaseUrl = import.meta.env.VITE_FIREBASE_DATABASE_URL;
 
   if (!databaseUrl) {
-    throw new Error(
-      'Firebase database URL is missing.'
-    );
+    throw new Error('Firebase database URL is missing.');
   }
 
-  const emailKey = getEmailKey(receiver);
+  // Save mail in receiver inbox
+  const receiverKey = getEmailKey(receiver);
 
   const inboxUrl =
-    `${databaseUrl}/mailboxes/${emailKey}/inbox.json?auth=${token}`;
+    `${databaseUrl}/mailboxes/${receiverKey}/inbox.json?auth=${token}`;
 
-  console.log('Saving mail to:', inboxUrl);
-
-  const inboxResponse = await fetch(
-    inboxUrl,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(mail),
-    }
-  );
+  const inboxResponse = await fetch(inboxUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(mail),
+  });
 
   if (!inboxResponse.ok) {
-    const errorText =
-      await inboxResponse.text();
-
-    console.error(
-      'Receiver inbox error:',
-      inboxResponse.status,
-      errorText
-    );
+    const errorText = await inboxResponse.text();
 
     throw new Error(
       `Receiver inbox error: ${inboxResponse.status} ${errorText}`
     );
   }
 
+  // Save mail in sender sentbox
   const senderKey = getEmailKey(senderEmail);
 
   const sentUrl =
     `${databaseUrl}/mailboxes/${senderKey}/sent.json?auth=${token}`;
 
-  const sentResponse = await fetch(
-    sentUrl,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(mail),
-    }
-  );
+  const sentResponse = await fetch(sentUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(mail),
+  });
 
   if (!sentResponse.ok) {
-    const errorText =
-      await sentResponse.text();
-
-    console.error(
-      'Sentbox error:',
-      sentResponse.status,
-      errorText
-    );
+    const errorText = await sentResponse.text();
 
     throw new Error(
       `Sentbox error: ${sentResponse.status} ${errorText}`
@@ -113,4 +86,58 @@ export const sendMail = async ({
   return {
     success: true,
   };
+};
+
+// GET RECEIVED MAILS
+export const getInboxMails = async () => {
+  const user = auth.currentUser;
+
+  if (!user) {
+    throw new Error('User is not logged in.');
+  }
+
+  const token = await getIdToken(user);
+
+  const databaseUrl = import.meta.env.VITE_FIREBASE_DATABASE_URL;
+
+  if (!databaseUrl) {
+    throw new Error('Firebase database URL is missing.');
+  }
+
+  const emailKey = getEmailKey(user.email);
+
+  const inboxUrl =
+    `${databaseUrl}/mailboxes/${emailKey}/inbox.json?auth=${token}`;
+
+  const response = await fetch(inboxUrl);
+
+  if (!response.ok) {
+    const errorText = await response.text();
+
+    throw new Error(
+      `Failed to fetch inbox: ${response.status} ${errorText}`
+    );
+  }
+
+  const data = await response.json();
+
+  if (!data) {
+    return [];
+  }
+
+  const mails = Object.entries(data).map(
+    ([id, mail]) => ({
+      id,
+      ...mail,
+    })
+  );
+
+  // Latest mails first
+  mails.sort(
+    (a, b) =>
+      new Date(b.createdAt) -
+      new Date(a.createdAt)
+  );
+
+  return mails;
 };
