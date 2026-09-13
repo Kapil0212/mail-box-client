@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import useMails from '../hooks/useMails';
 
 import {
   Container,
@@ -10,9 +11,10 @@ import {
 } from 'react-bootstrap';
 
 import TextEditor from './TextEditor';
-import { sendMail } from '../services/mailService';
 
 const ComposeMail = ({ onClose }) => {
+
+  const { sendMail } = useMails();
 
   const [receiverEmail, setReceiverEmail] =
     useState('');
@@ -132,14 +134,18 @@ const ComposeMail = ({ onClose }) => {
                   <Form.Label>
                     To
                   </Form.Label>
-<Form.Control
-  type="email"
-  placeholder="Enter receiver email"
-  value={receiverEmail}
-  onChange={(e) =>
-    setReceiverEmail(e.target.value)
-  }
-/>npx vitest run
+
+                  <Form.Control
+                    type="email"
+                    placeholder="Enter receiver email"
+                    value={receiverEmail}
+                    onChange={(e) =>
+                      setReceiverEmail(
+                        e.target.value
+                      )
+                    }
+                  />
+
                 </Form.Group>
 
                 <Form.Group className="mb-3">
@@ -148,14 +154,16 @@ const ComposeMail = ({ onClose }) => {
                     Subject
                   </Form.Label>
 
-                 <Form.Control
-  type="text"
-  placeholder="Subject"
-  value={subject}
-  onChange={(e) =>
-    setSubject(e.target.value)
-  }
-/>
+                  <Form.Control
+                    type="text"
+                    placeholder="Subject"
+                    value={subject}
+                    onChange={(e) =>
+                      setSubject(
+                        e.target.value
+                      )
+                    }
+                  />
 
                 </Form.Group>
 
@@ -178,7 +186,9 @@ const ComposeMail = ({ onClose }) => {
                     variant="primary"
                     disabled={loading}
                   >
-                    {loading ? 'Sending...' : 'Send'}
+                    {loading
+                      ? 'Sending...'
+                      : 'Send'}
                   </Button>
 
                 </div>

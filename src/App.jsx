@@ -10,7 +10,7 @@ import ComposeMail from './components/ComposeMail';
 
 const App = () => {
 
-  const [screen, setScreen] = useState(false);
+  const [screen, setScreen] = useState('signup');
 
   const [unreadCount, setUnreadCount] = useState(0);
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import {
   Container,
@@ -10,114 +10,22 @@ import {
   Alert,
 } from 'react-bootstrap';
 
-import {
-  getInboxMails,
-  getSentMails,
-  markMailAsRead,
-  deleteMail,
-} from '../services/mailService';
+import useMails from '../hooks/useMails';
 
 import ComposeMail from './ComposeMail';
-
-const initialState = {
-  mails: [],
-  loading: true,
-  error: '',
-};
-
-const areMailsEqual = (oldMails, newMails) => {
-  if (oldMails.length !== newMails.length) {
-    return false;
-  }
-
-  return oldMails.every((oldMail, index) => {
-    const newMail = newMails[index];
-
-    if (!newMail) {
-      return false;
-    }
-
-    return (
-      oldMail.id === newMail.id &&
-      oldMail.read === newMail.read
-    );
-  });
-};
-
-const inboxReducer = (state, action) => {
-  switch (action.type) {
-
-    case 'FETCH_START':
-      return {
-        ...state,
-        loading: true,
-        error: '',
-      };
-
-    case 'FETCH_SUCCESS': {
-      const newMails = action.payload;
-
-      /*
-       * If mails have not changed, return the same state.
-       * This avoids unnecessary React re-renders during polling.
-       */
-      if (
-        !state.loading &&
-        areMailsEqual(state.mails, newMails)
-      ) {
-        return state;
-      }
-
-      return {
-        ...state,
-        mails: newMails,
-        loading: false,
-        error: '',
-      };
-    }
-
-    case 'FETCH_ERROR':
-      return {
-        ...state,
-        loading: false,
-        error: action.payload,
-      };
-
-    case 'MARK_AS_READ':
-      return {
-        ...state,
-        mails: state.mails.map((mail) =>
-          mail.id === action.payload
-            ? {
-                ...mail,
-                read: true,
-              }
-            : mail
-        ),
-      };
-
-    case 'DELETE_MAIL':
-      return {
-        ...state,
-        mails: state.mails.filter(
-          (mail) => mail.id !== action.payload
-        ),
-      };
-
-    default:
-      return state;
-  }
-};
 
 const Inbox = ({
   mailboxType = 'inbox',
   onUnreadCountChange,
 }) => {
-
-  const [state, dispatch] = useReducer(
-    inboxReducer,
-    initialState
-  );
+  const {
+    mails,
+    loading,
+    error,
+    fetchMails,
+    markAsRead,
+    deleteMail,
+  } = useMails(mailboxType);
 
   const [selectedMail, setSelectedMail] =
     useState(null);
@@ -127,130 +35,32 @@ const Inbox = ({
 
   const isSentBox = mailboxType === 'sent';
 
-  /*
-   * Fetch mails from Firebase.
-   */
-  const loadInbox = async () => {
-    try {
-
-      const mails = isSentBox
-        ? await getSentMails()
-        : await getInboxMails();
-
-      dispatch({
-        type: 'FETCH_SUCCESS',
-        payload: mails,
-      });
-
-    } catch (error) {
-
-      console.error(
-        'Mailbox error:',
-        error
-      );
-
-      dispatch({
-        type: 'FETCH_ERROR',
-        payload:
-          error.message ||
-          'Unable to load mails.',
-      });
-    }
-  };
-
-  /*
-   * Realtime mail polling.
-   *
-   * First fetch happens immediately.
-   * After that, mails are fetched every 2 seconds.
-   *
-   * The interval is cleared when the component
-   * is unmounted or mailbox type changes.
-   */
-  useEffect(() => {
-
-    let isFetching = false;
-
-    const fetchMails = async () => {
-
-      /*
-       * Prevent overlapping API requests if
-       * the previous request is still running.
-       */
-      if (isFetching) {
-        return;
-      }
-
-      isFetching = true;
-
-      try {
-        await loadInbox();
-      } finally {
-        isFetching = false;
-      }
-    };
-
-    /*
-     * Initial fetch.
-     */
-    fetchMails();
-
-    /*
-     * Fetch every 2 seconds.
-     */
-    const interval = setInterval(() => {
-      fetchMails();
-    }, 2000);
-
-    /*
-     * Cleanup interval.
-     */
-    return () => {
-      clearInterval(interval);
-    };
-
-  }, [mailboxType]);
-
-  /*
-   * Calculate unread mails.
-   */
   const unreadCount = isSentBox
     ? 0
-    : state.mails.filter(
+    : mails.filter(
         (mail) => mail.read !== true
       ).length;
 
-  /*
-   * Update unread count in Sidebar.
-   */
   useEffect(() => {
-
     if (
       onUnreadCountChange &&
       !isSentBox
     ) {
       onUnreadCountChange(unreadCount);
     }
-
   }, [
     unreadCount,
     onUnreadCountChange,
     isSentBox,
   ]);
 
-  /*
-   * Get short message preview.
-   */
   const getMessagePreview = (message) => {
-
     if (!message) {
       return '';
     }
 
     if (typeof message === 'object') {
-
       if (Array.isArray(message.blocks)) {
-
         return message.blocks
           .map((block) => block.text || '')
           .join(' ')
@@ -263,19 +73,13 @@ const Inbox = ({
     return String(message);
   };
 
-  /*
-   * Get complete message.
-   */
   const getFullMessage = (message) => {
-
     if (!message) {
       return '';
     }
 
     if (typeof message === 'object') {
-
       if (Array.isArray(message.blocks)) {
-
         return message.blocks
           .map((block) => block.text || '')
           .join('\n')
@@ -288,11 +92,7 @@ const Inbox = ({
     return String(message);
   };
 
-  /*
-   * Format mail date.
-   */
   const formatDate = (date) => {
-
     if (!date) {
       return '';
     }
@@ -306,16 +106,9 @@ const Inbox = ({
     return mailDate.toLocaleString();
   };
 
-  /*
-   * Open mail.
-   */
   const handleMailClick = async (mail) => {
-
     setSelectedMail(mail);
 
-    /*
-     * Sent mails don't need read/unread handling.
-     */
     if (
       isSentBox ||
       mail.read === true
@@ -324,16 +117,17 @@ const Inbox = ({
     }
 
     try {
+      await markAsRead(mail.id);
 
-      await markMailAsRead(mail.id);
-
-      dispatch({
-        type: 'MARK_AS_READ',
-        payload: mail.id,
-      });
-
+      setSelectedMail((previousMail) =>
+        previousMail
+          ? {
+              ...previousMail,
+              read: true,
+            }
+          : previousMail
+      );
     } catch (error) {
-
       console.error(
         'Failed to mark mail as read:',
         error
@@ -341,19 +135,9 @@ const Inbox = ({
     }
   };
 
-  /*
-   * Delete mail.
-   */
   const handleDeleteMail = async (mailId) => {
-
     try {
-
       await deleteMail(mailId);
-
-      dispatch({
-        type: 'DELETE_MAIL',
-        payload: mailId,
-      });
 
       if (
         selectedMail &&
@@ -361,37 +145,20 @@ const Inbox = ({
       ) {
         setSelectedMail(null);
       }
-
     } catch (error) {
-
       console.error(
         'Delete mail error:',
         error
       );
-
-      dispatch({
-        type: 'FETCH_ERROR',
-        payload:
-          error.message ||
-          'Unable to delete mail.',
-      });
     }
   };
 
-  /*
-   * Compose screen.
-   */
   if (showCompose) {
-
     return (
       <Container fluid className="py-4">
-
         <Row className="justify-content-center">
-
           <Col md={10} lg={9}>
-
             <div className="d-flex justify-content-between align-items-center mb-3">
-
               <h4 className="mb-0">
                 Compose Mail
               </h4>
@@ -404,40 +171,31 @@ const Inbox = ({
               >
                 Back to Mailbox
               </Button>
-
             </div>
 
             <ComposeMail />
-
           </Col>
-
         </Row>
-
       </Container>
     );
   }
 
-  /*
-   * Read mail screen.
-   */
   if (selectedMail) {
-
     return (
       <Container fluid className="py-4">
-
         <Row className="justify-content-center">
-
           <Col md={10} lg={9}>
-
             <div className="d-flex justify-content-between align-items-center mb-3">
-
               <Button
                 variant="outline-secondary"
                 onClick={() =>
                   setSelectedMail(null)
                 }
               >
-                ← Back to {isSentBox ? 'Sent' : 'Inbox'}
+                ← Back to{' '}
+                {isSentBox
+                  ? 'Sent'
+                  : 'Inbox'}
               </Button>
 
               {!isSentBox && (
@@ -452,11 +210,9 @@ const Inbox = ({
                   Delete
                 </Button>
               )}
-
             </div>
 
             <div className="border rounded bg-white p-4">
-
               <h4 className="mb-3">
                 {selectedMail.subject ||
                   '(No subject)'}
@@ -490,31 +246,19 @@ const Inbox = ({
                   selectedMail.message
                 )}
               </div>
-
             </div>
-
           </Col>
-
         </Row>
-
       </Container>
     );
   }
 
-  /*
-   * Main Inbox / Sent screen.
-   */
   return (
     <Container fluid className="py-4">
-
       <Row>
-
         <Col>
-
           <div className="d-flex justify-content-between align-items-center mb-3">
-
             <div>
-
               <h3 className="mb-1">
                 {isSentBox
                   ? 'Sent Mail'
@@ -529,15 +273,13 @@ const Inbox = ({
                     : ''}
                 </small>
               )}
-
             </div>
 
             <div className="d-flex gap-2">
-
               <Button
                 variant="outline-primary"
-                onClick={loadInbox}
-                disabled={state.loading}
+                onClick={fetchMails}
+                disabled={loading}
               >
                 Refresh
               </Button>
@@ -550,21 +292,17 @@ const Inbox = ({
               >
                 Compose
               </Button>
-
             </div>
-
           </div>
 
-          {state.error && (
+          {error && (
             <Alert variant="danger">
-              {state.error}
+              {error}
             </Alert>
           )}
 
-          {state.loading ? (
-
+          {loading ? (
             <div className="text-center py-5">
-
               <Spinner animation="border" />
 
               <div className="mt-2">
@@ -574,13 +312,9 @@ const Inbox = ({
                   : 'inbox'}
                 ...
               </div>
-
             </div>
-
-          ) : state.mails.length === 0 ? (
-
+          ) : mails.length === 0 ? (
             <div className="text-center py-5 border rounded bg-light">
-
               <h5>
                 No mails found
               </h5>
@@ -599,25 +333,17 @@ const Inbox = ({
               >
                 Compose Mail
               </Button>
-
             </div>
-
           ) : (
-
             <ListGroup>
-
-              {state.mails.map((mail) => (
-
+              {mails.map((mail) => (
                 <ListGroup.Item
                   key={mail.id}
                   className="py-3"
                 >
-
                   <Row className="align-items-center">
-
                     {!isSentBox && (
                       <Col xs={1} md={1}>
-
                         {mail.read !== true && (
                           <span
                             style={{
@@ -632,13 +358,20 @@ const Inbox = ({
                             }}
                           />
                         )}
-
                       </Col>
                     )}
 
                     <Col
-                      xs={isSentBox ? 12 : 11}
-                      md={isSentBox ? 4 : 3}
+                      xs={
+                        isSentBox
+                          ? 12
+                          : 11
+                      }
+                      md={
+                        isSentBox
+                          ? 4
+                          : 3
+                      }
                       className={
                         !isSentBox &&
                         mail.read !== true
@@ -709,7 +442,6 @@ const Inbox = ({
                         md={1}
                         className="text-md-end mt-2 mt-md-0"
                       >
-
                         <Button
                           variant="outline-danger"
                           size="sm"
@@ -721,24 +453,15 @@ const Inbox = ({
                         >
                           Delete
                         </Button>
-
                       </Col>
                     )}
-
                   </Row>
-
                 </ListGroup.Item>
-
               ))}
-
             </ListGroup>
-
           )}
-
         </Col>
-
       </Row>
-
     </Container>
   );
 };
