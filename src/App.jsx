@@ -39,17 +39,21 @@ const App = () => {
         setScreen={setScreen}
       />
 
-      {screen === 'signup' && (
-        <Signup
-          setScreen={setScreen}
-        />
-      )}
+     {screen === 'signup' && (
+  <div className="auth-screen">
+    <Signup
+      setScreen={setScreen}
+    />
+  </div>
+)}
 
-      {screen === 'login' && (
-        <Login
-          setScreen={setScreen}
-        />
-      )}
+{screen === 'login' && (
+  <div className="auth-screen">
+    <Login
+      setScreen={setScreen}
+    />
+  </div>
+)}
 
       {isMailbox && (
         <div className="mailbox-layout">

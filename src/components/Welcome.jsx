@@ -1,6 +1,7 @@
+import React from 'react';
 import { Button } from 'react-bootstrap';
-
 import { signOut } from 'firebase/auth';
+
 import { auth } from '../firebase';
 
 const Welcome = ({ setScreen }) => {
@@ -12,36 +13,49 @@ const Welcome = ({ setScreen }) => {
       localStorage.removeItem('idToken');
 
       setScreen('login');
-
     } catch (error) {
-      console.error('Logout failed:', error);
+      console.error('Logout error:', error);
     }
   };
 
+  const handleCompose = () => {
+    setScreen('compose');
+  };
+
   return (
-    <div className="welcome-area">
+    <div className="welcome-page">
 
-      <div className="welcome-card">
+      <div className="welcome-box">
 
-        <h1>Welcome to your mail box</h1>
+        <div className="welcome-icon">
+          📧
+        </div>
+
+        <h1>
+          Welcome to your Mailbox
+        </h1>
 
         <p>
           You have successfully logged in.
         </p>
 
-        <Button
-          className="compose-main-button"
-          onClick={() => setScreen('compose')}
-        >
-          Compose Mail
-        </Button>
+        <div className="welcome-actions">
 
-        <Button
-          className="logout-button mt-3"
-          onClick={handleLogout}
-        >
-          Logout
-        </Button>
+          <Button
+            variant="primary"
+            onClick={handleCompose}
+          >
+            ✎ Compose Mail
+          </Button>
+
+          <Button
+            variant="outline-secondary"
+            onClick={handleLogout}
+          >
+            Logout
+          </Button>
+
+        </div>
 
       </div>
 

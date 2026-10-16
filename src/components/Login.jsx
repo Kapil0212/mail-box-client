@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Form, Button, Card } from 'react-bootstrap';
 
 import {
   signInWithEmailAndPassword,
@@ -8,36 +7,30 @@ import {
 
 import { auth } from '../firebase';
 
-const firebaseErrors = {
-  'auth/invalid-credential':
-    'Invalid email or password.',
-
-  'auth/user-not-found':
-    'Invalid email or password.',
-
-  'auth/wrong-password':
-    'Invalid email or password.',
-
-  'auth/invalid-email':
-    'Please enter a valid email address.',
-
-  'auth/network-request-failed':
-    'Network error. Please check your internet connection.',
-};
+import {
+  Container,
+  Row,
+  Col,
+  Form,
+  Button,
+  Card,
+  Alert,
+} from 'react-bootstrap';
 
 const Login = ({ setScreen }) => {
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     setError('');
 
-    if (!email.trim() || !password) {
+    if (!email.trim() || !password.trim()) {
       setError('Please enter email and password.');
       return;
     }
@@ -45,33 +38,39 @@ const Login = ({ setScreen }) => {
     try {
       setLoading(true);
 
-      const userCredential =
+      const result =
         await signInWithEmailAndPassword(
           auth,
           email.trim(),
           password
         );
 
-      const token = await getIdToken(
-        userCredential.user
-      );
+      const token =
+        await getIdToken(result.user);
 
       localStorage.setItem('idToken', token);
-
-      setEmail('');
-      setPassword('');
 
       setScreen('welcome');
 
     } catch (err) {
       console.error(err);
 
-      const message =
-        firebaseErrors[err.code] ||
-        'Invalid email or password.';
+      if (
+        err.code === 'auth/invalid-credential' ||
+        err.code === 'auth/wrong-password' ||
+        err.code === 'auth/user-not-found'
+      ) {
+        setError('Invalid email or password.');
 
-      alert(message);
-      setError(message);
+        window.alert(
+          'Invalid email or password.'
+        );
+      } else {
+        setError(
+          err.message ||
+          'Login failed. Please try again.'
+        );
+      }
 
     } finally {
       setLoading(false);
@@ -79,65 +78,117 @@ const Login = ({ setScreen }) => {
   };
 
   return (
-    <div className="auth-area">
+    <div className="auth-page">
 
-      <Card className="auth-card login-card">
-        <Card.Body>
+      <div className="auth-card">
 
-          <h2 className="auth-title">Login</h2>
+        <div className="auth-header">
 
-          {error && (
-            <div className="alert alert-danger">
-              {error}
-            </div>
-          )}
+          <div className="auth-icon">
+            📧
+          </div>
 
-          <Form onSubmit={handleLogin}>
+          <h2>Login</h2>
 
-            <Form.Group className="mb-3">
-              <Form.Control
-                type="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </Form.Group>
+          <p>
+            Login to access your mailbox
+          </p>
 
-            <Form.Group className="mb-2">
-              <Form.Control
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) =>
-                  setPassword(e.target.value)
-                }
-              />
-            </Form.Group>
+        </div>
 
-            <div className="forgot-password">
-              <a href="#forgot">Forgot Password?</a>
-            </div>
+        {error && (
+          <Alert
+            variant="danger"
+            className="auth-alert"
+          >
+            {error}
+          </Alert>
+        )}
 
-            <Button
-              type="submit"
-              className="auth-submit"
-              disabled={loading}
-            >
-              {loading ? 'Logging in...' : 'Login'}
-            </Button>
+        <Form onSubmit={handleSubmit}>
 
-          </Form>
+          <Form.Group className="mb-3">
+
+            <Form.Label>
+              Email
+            </Form.Label>
+
+            <Form.Control
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) =>
+                setEmail(e.target.value)
+              }
+            />
+
+          </Form.Group>
+
+
+          <Form.Group className="mb-3">
+
+            <Form.Label>
+              Password
+            </Form.Label>
+
+            <Form.Control
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) =>
+                setPassword(e.target.value)
+              }
+            />
+
+          </Form.Group>
+
 
           <Button
-            variant="outline-success"
-            className="switch-button"
-            onClick={() => setScreen('signup')}
+            type="submit"
+            variant="primary"
+            className="auth-submit"
+            disabled={loading}
           >
-            Don't have an account? Sign up
+            {loading
+              ? 'Logging in...'
+              : 'Login'}
           </Button>
 
-        </Card.Body>
-      </Card>
+        </Form>
+
+
+        <div className="auth-link">
+
+          <span>
+            Don't have an account?{' '}
+          </span>
+
+          <button
+            type="button"
+            onClick={() =>
+              setScreen('signup')
+            }
+          >
+            Create Account
+          </button>
+
+        </div>
+
+
+        <div className="auth-link">
+
+          <button
+            type="button"
+            onClick={() =>
+              setScreen('signup')
+            }
+          >
+            ← Back to Signup
+          </button>
+
+        </div>
+
+      </div>
 
     </div>
   );

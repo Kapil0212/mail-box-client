@@ -1,373 +1,836 @@
-:root {
+/* =========================================
+   GLOBAL
+========================================= */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100%;
+}
+
+body {
   font-family: Arial, Helvetica, sans-serif;
-  color: #222;
-  background: #fff;
+  background: #f5f7fb;
+  color: #212529;
 }
 
-* { box-sizing: border-box; }
 
-html, body, #root { min-height: 100%; }
+/* =========================================
+   NAVBAR
+========================================= */
 
-body { margin: 0; overflow-x: hidden; }
-
-.app-shell {
-  min-height: 100vh;
-  position: relative;
-  overflow: hidden;
-  background: #fff;
+.navbar {
+  min-height: 64px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
 }
 
-.top-navbar {
-  position: relative;
-  z-index: 5;
-  height: 58px;
-  background: rgba(255, 255, 255, 0.98);
-  border-bottom: 1px solid #f1f1f1;
-}
 
-.brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  color: #168fd0 !important;
-  font-size: 20px;
-  font-weight: 500;
-}
+/* =========================================
+   LOGIN / SIGNUP
+========================================= */
 
-.brand-mark {
-  width: 28px;
-  height: 28px;
-  border: 3px solid #2e9b63;
-  border-radius: 9px 3px 9px 3px;
-  display: inline-block;
-  position: relative;
-  transform: rotate(45deg);
-}
-
-.brand-mark-inner {
-  position: absolute;
-  inset: 5px;
-  border: 2px solid #2e9b63;
-  border-radius: 50%;
-}
-
-.top-navbar .nav-link {
-  color: #4d4d4d;
-  font-size: 13px;
-}
-
-.signup-area {
-  position: relative;
-  z-index: 2;
-  min-height: calc(100vh - 58px);
-  padding-bottom: 40px;
-}
-
-.blue-shape {
-  position: absolute;
-  z-index: 1;
-  top: 0;
-  right: 0;
-  width: 43vw;
-  height: 43vh;
-  min-width: 500px;
-  min-height: 310px;
-  background: #0868f2;
-  border-bottom-left-radius: 68% 72%;
-  clip-path: ellipse(76% 84% at 100% 0%);
-}
-
-.signup-stack {
-  width: 226px;
-  margin-top: -18px;
-}
-
-.signup-card {
-  border: 1px solid #dedede;
-  border-radius: 0;
-  box-shadow: none;
-  background: rgba(255, 255, 255, 0.96);
-}
-
-.signup-card .card-body {
-  padding: 25px 15px 20px;
-}
-
-.signup-title {
-  text-align: center;
-  font-size: 18px;
-  font-weight: 400;
-  margin: 0 0 18px;
-}
-
-.signup-card .form-control {
-  height: 31px;
-  border-radius: 4px;
-  border-color: #e3e3e3;
-  font-size: 10px;
-  padding: 5px 8px;
-}
-
-.signup-card .form-control::placeholder { color: #aaa; }
-.signup-card .form-control:focus {
-  border-color: #86b7fe;
-  box-shadow: 0 0 0 .12rem rgba(13, 110, 253, .12);
-}
-
-.signup-button {
+.auth-page {
   width: 100%;
-  height: 30px;
-  padding: 2px 8px;
-  border: 0;
-  border-radius: 18px;
-  background: #159eea;
-  font-size: 10px;
-}
+  min-height: calc(100vh - 64px);
 
-.signup-button:hover,
-.signup-button:focus { background: #078ed8; }
-
-.login-button {
-  width: 100%;
-  height: 34px;
-  border-radius: 3px;
-  font-size: 10px;
-  color: #444;
-  background: rgba(232, 248, 241, .65);
-  border-color: #8eb9a5;
-}
-
-.login-button:hover,
-.login-button:focus {
-  color: #333;
-  background: #e4f6ec;
-  border-color: #72a68e;
-}
-
-.message {
-  font-size: 10px;
-  padding: 6px 8px;
-  margin: -5px 0 10px;
-}
-
-@media (max-width: 768px) {
-  .top-navbar { height: auto; min-height: 58px; }
-  .signup-area { min-height: calc(100vh - 58px); }
-  .blue-shape { width: 520px; height: 300px; min-width: 0; }
-  .signup-stack { margin-top: 25px; }
-}
-.login-card {
-  min-height: 225px;
-}
-
-.forgot-password {
-  text-align: center;
-  margin-top: 6px;
-  font-size: 12px;
-}
-
-.forgot-password a {
-  color: #6c63a8;
-}
-
-.welcome-area {
-  min-height: calc(100vh - 76px);
   display: flex;
-  justify-content: center;
   align-items: center;
-  position: relative;
-  z-index: 2;
+  justify-content: center;
+
+  padding: 30px 20px;
+
+  background: linear-gradient(
+    135deg,
+    #f5f7fb,
+    #eef3ff
+  );
 }
 
-.welcome-card {
-  width: 430px;
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+
+  background: #ffffff;
+
+  padding: 35px;
+
+  border-radius: 18px;
+
+  border: 1px solid #e5e7eb;
+
+  box-shadow:
+    0 15px 40px rgba(0, 0, 0, 0.10);
+}
+
+
+/* =========================================
+   AUTH HEADER
+========================================= */
+
+.auth-header {
   text-align: center;
-  padding: 30px;
-  border-radius: 4px;
-}
-
-.welcome-card h1 {
-  font-size: 28px;
-  margin-bottom: 12px;
-}
-
-.welcome-card p {
-  color: #666;
   margin-bottom: 25px;
 }
 
-.logout-button {
-  width: 100%;
-  border-radius: 25px;
-  background: #0d8fe9;
-  border: none;
-  padding: 9px;
+.auth-icon {
+  width: 58px;
+  height: 58px;
+
+  margin: 0 auto 14px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #eaf2ff;
+
+  border-radius: 50%;
+
+  font-size: 27px;
 }
 
-.logout-button:hover {
-  background: #087dcc;
+.auth-header h2 {
+  margin: 0 0 8px;
+
+  font-size: 28px;
+
+  font-weight: 600;
 }
-/* =========================
+
+.auth-header p {
+  margin: 0;
+
+  color: #6c757d;
+
+  font-size: 14px;
+}
+
+
+/* =========================================
+   AUTH FORM
+========================================= */
+
+.auth-card .form-label {
+  font-weight: 500;
+
+  margin-bottom: 7px;
+}
+
+.auth-card .form-control {
+  height: 47px;
+
+  border-radius: 9px;
+
+  border: 1px solid #ced4da;
+
+  padding: 10px 13px;
+}
+
+.auth-card .form-control:focus {
+  border-color: #0d6efd;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(13, 110, 253, 0.12);
+}
+
+
+/* =========================================
+   AUTH BUTTON
+========================================= */
+
+.auth-submit {
+  width: 100%;
+
+  height: 47px;
+
+  margin-top: 8px;
+
+  border-radius: 9px;
+
+  font-weight: 600;
+}
+
+
+/* =========================================
+   AUTH ALERT
+========================================= */
+
+.auth-alert {
+  border-radius: 9px;
+
+  font-size: 14px;
+
+  margin-bottom: 20px;
+}
+
+
+/* =========================================
+   AUTH LINKS
+========================================= */
+
+.auth-link {
+  text-align: center;
+
+  margin-top: 18px;
+
+  font-size: 14px;
+
+  color: #6c757d;
+}
+
+.auth-link button {
+  border: none;
+
+  background: transparent;
+
+  color: #0d6efd;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  padding: 0;
+}
+
+.auth-link button:hover {
+  text-decoration: underline;
+}
+
+
+/* =========================================
    MAILBOX LAYOUT
-========================= */
+========================================= */
 
 .mailbox-layout {
   display: flex;
-  min-height: calc(100vh - 76px);
-  background: #f8f9fa;
-}
 
-.mailbox-content {
-  flex: 1;
-}
+  width: 100%;
 
+  min-height: calc(100vh - 64px);
 
-/* =========================
-   NAVBAR
-========================= */
-
-.main-navbar {
-  min-height: 76px;
-  padding: 0 30px;
-  border-bottom: 1px solid #eee;
-}
-
-.brand-name {
-  font-weight: 700;
-  cursor: pointer;
+  background: #f5f7fb;
 }
 
 
-/* =========================
+/* =========================================
    SIDEBAR
-========================= */
+========================================= */
 
 .sidebar {
-  width: 220px;
-  min-height: calc(100vh - 76px);
-  padding: 25px 15px;
-  background: white;
-  border-right: 1px solid #eee;
+  width: 240px;
+
+  min-height: calc(100vh - 64px);
+
+  flex-shrink: 0;
+
+  background: #ffffff;
+
+  border-right: 1px solid #dee2e6;
+
+  padding: 25px 18px;
 }
 
 .compose-button {
   width: 100%;
-  border-radius: 25px;
-  padding: 10px;
+
+  height: 52px;
+
+  border-radius: 10px;
+
+  font-weight: 600;
+
+  box-shadow:
+    0 4px 12px
+    rgba(13, 110, 253, 0.15);
 }
 
-.sidebar .nav-link {
-  color: #333;
-  cursor: pointer;
-  padding: 12px 15px;
-  border-radius: 5px;
+.sidebar .btn-link {
+  width: 100%;
+
+  color: #343a40;
+
+  font-weight: 500;
+
+  padding: 11px 12px;
+
+  border-radius: 8px;
+
+  margin-bottom: 5px;
+
+  text-align: left;
+
+  text-decoration: none;
 }
 
-.sidebar .nav-link:hover {
-  background: #f1f5f9;
+.sidebar .btn-link:hover {
+  background: #f0f4ff;
+
+  color: #0d6efd;
 }
 
 
-/* =========================
+/* =========================================
+   MAIN MAILBOX AREA
+========================================= */
+
+.mailbox-content {
+  flex: 1;
+
+  min-width: 0;
+
+  min-height: calc(100vh - 64px);
+
+  background: #f5f7fb;
+}
+
+
+/* =========================================
+   WELCOME PAGE
+========================================= */
+
+/*
+   This is the important part.
+
+   Sidebar is already taking 240px.
+   This container takes ALL remaining space
+   and centers the Welcome box inside it.
+*/
+
+.welcome-page {
+  width: 100%;
+
+  height: calc(100vh - 64px);
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  padding: 30px;
+}
+
+
+/* =========================================
+   WELCOME BOX
+========================================= */
+
+.welcome-box {
+  width: 100%;
+
+  max-width: 620px;
+
+  padding: 50px 45px;
+
+  background: #ffffff;
+
+  border: 1px solid #e5e7eb;
+
+  border-radius: 18px;
+
+  text-align: center;
+
+  box-shadow:
+    0 12px 35px
+    rgba(0, 0, 0, 0.08);
+}
+
+
+/* =========================================
+   WELCOME ICON
+========================================= */
+
+.welcome-icon {
+  width: 70px;
+
+  height: 70px;
+
+  margin: 0 auto 20px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #eaf2ff;
+
+  font-size: 34px;
+}
+
+
+/* =========================================
+   WELCOME HEADING
+========================================= */
+
+.welcome-box h1 {
+  margin: 0 0 12px;
+
+  font-size: 38px;
+
+  font-weight: 600;
+
+  color: #212529;
+}
+
+
+/* =========================================
+   WELCOME TEXT
+========================================= */
+
+.welcome-box p {
+  margin: 0;
+
+  font-size: 17px;
+
+  color: #6c757d;
+}
+
+
+/* =========================================
+   WELCOME BUTTONS
+========================================= */
+
+.welcome-actions {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 14px;
+
+  margin-top: 30px;
+}
+
+.welcome-actions .btn {
+  min-width: 145px;
+
+  height: 46px;
+
+  padding: 10px 20px;
+
+  border-radius: 9px;
+
+  font-weight: 600;
+
+  transition: all 0.2s ease;
+}
+
+.welcome-actions .btn:hover {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 6px 15px
+    rgba(0, 0, 0, 0.12);
+}
+
+
+/* =========================================
+   INBOX / SENT
+========================================= */
+
+.mailbox-content .list-group {
+  border-radius: 10px;
+
+  overflow: hidden;
+
+  box-shadow:
+    0 3px 15px
+    rgba(0, 0, 0, 0.06);
+}
+
+.mailbox-content .list-group-item {
+  background: #ffffff;
+
+  border-left: none;
+
+  border-right: none;
+
+  border-top: none;
+}
+
+.mailbox-content .list-group-item:hover {
+  background: #f8f9fa;
+}
+
+
+/* =========================================
    COMPOSE
-========================= */
+========================================= */
 
 .compose-container {
-  padding: 30px;
+  padding-top: 30px;
+
+  padding-bottom: 30px;
 }
 
 .compose-card {
   border: none;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+
+  border-radius: 14px;
+
+  overflow: hidden;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 8px 30px
+    rgba(0, 0, 0, 0.08);
 }
 
 .compose-header {
   display: flex;
-  justify-content: space-between;
+
   align-items: center;
-  background: white;
-  border-bottom: 1px solid #eee;
-  padding: 15px 20px;
+
+  justify-content: space-between;
+
+  background: #ffffff;
+
+  border-bottom: 1px solid #e9ecef;
+
+  padding: 16px 20px;
+}
+
+.compose-header h5 {
+  margin: 0;
+
+  font-weight: 600;
 }
 
 .compose-card .card-body {
   padding: 25px;
 }
 
+.compose-card .form-label {
+  font-weight: 500;
+}
+
+.compose-card .form-control {
+  border-radius: 8px;
+}
+
 .compose-footer {
   display: flex;
-  justify-content: flex-start;
+
+  justify-content: flex-end;
+
   margin-top: 20px;
 }
 
-.compose-footer button {
-  min-width: 90px;
-  border-radius: 5px;
-}
 
-.text-editor {
-  border-radius: 4px;
+/* =========================================
+   TEXT EDITOR
+========================================= */
+
+.rdw-editor-wrapper {
+  border: 1px solid #ced4da;
+
+  border-radius: 8px;
+
+  background: #ffffff;
+
   overflow: hidden;
 }
 
+.rdw-editor-toolbar {
+  margin-bottom: 0 !important;
 
-/* =========================
-   WELCOME
-========================= */
+  border: none !important;
 
-.welcome-area {
-  min-height: calc(100vh - 76px);
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  border-bottom: 1px solid #dee2e6 !important;
 }
 
-.welcome-card {
-  width: 430px;
-  text-align: center;
-  padding: 30px;
-  border-radius: 4px;
-}
+.rdw-editor-main {
+  min-height: 220px;
 
-.welcome-card h1 {
-  font-size: 28px;
-  margin-bottom: 12px;
-}
-
-.welcome-card p {
-  color: #666;
-  margin-bottom: 25px;
-}
-
-.compose-main-button {
-  width: 100%;
-  border-radius: 25px;
-  padding: 9px;
-}
-
-.logout-button {
-  width: 100%;
-  border-radius: 25px;
-  padding: 9px;
+  padding: 10px 15px;
 }
 
 
-/* =========================
-   MOBILE
-========================= */
+/* =========================================
+   READ MAIL
+========================================= */
+
+.mailbox-content .border.rounded {
+  border-color: #e1e5ea !important;
+
+  box-shadow:
+    0 5px 20px
+    rgba(0, 0, 0, 0.05);
+}
+
+
+/* =========================================
+   ALERT
+========================================= */
+
+.alert {
+  border-radius: 8px;
+}
+
+
+/* =========================================
+   TABLET
+========================================= */
 
 @media (max-width: 768px) {
 
-  .sidebar {
-    width: 170px;
+  .mailbox-layout {
+    flex-direction: column;
   }
 
-  .compose-container {
+  .sidebar {
+    width: 100%;
+
+    min-height: auto;
+
+    border-right: none;
+
+    border-bottom: 1px solid #dee2e6;
+
     padding: 15px;
   }
 
-  .main-navbar {
-    padding: 0 15px;
+  .mailbox-content {
+    width: 100%;
+
+    min-height: calc(100vh - 150px);
   }
 
+  .welcome-page {
+    height: calc(100vh - 150px);
+
+    padding: 20px 15px;
+  }
+
+  .welcome-box {
+    padding: 40px 25px;
+  }
+
+  .welcome-box h1 {
+    font-size: 32px;
+  }
+
+  .auth-page {
+    min-height: calc(100vh - 64px);
+  }
+
+  .auth-card {
+    max-width: 430px;
+  }
+}
+
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 480px) {
+
+  .auth-page {
+    padding: 20px 12px;
+  }
+
+  .auth-card {
+    padding: 25px 18px;
+
+    border-radius: 13px;
+  }
+
+  .welcome-page {
+    padding: 15px 10px;
+  }
+
+  .welcome-box {
+    padding: 30px 18px;
+
+    border-radius: 14px;
+  }
+
+  .welcome-box h1 {
+    font-size: 26px;
+  }
+
+  .welcome-box p {
+    font-size: 15px;
+  }
+
+  .welcome-actions {
+    flex-direction: column;
+
+    width: 100%;
+  }
+
+  .welcome-actions .btn {
+    width: 100%;
+  }
+
+  .mailbox-content {
+    padding: 0;
+  }
+
+  .compose-container {
+    padding: 15px 5px;
+  }
+}
+/* =========================================
+   LOGIN + SIGNUP - FORCE CENTER
+========================================= */
+
+.auth-screen {
+  width: 100%;
+  min-height: calc(100vh - 64px);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: linear-gradient(
+    135deg,
+    #f5f7fb 0%,
+    #eef3ff 100%
+  );
+
+  padding: 30px 20px;
+}
+
+
+/*
+   Login / Signup ke andar agar Bootstrap
+   Container/Row/Col laga hua hai to bhi
+   center maintain rahega.
+*/
+
+.auth-screen > * {
+  width: 100%;
+  margin: 0 !important;
+}
+
+
+/* Bootstrap container ko full available
+   width do, card uske andar center hoga */
+
+.auth-screen .container {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto !important;
+}
+
+
+/* Row ko center */
+
+.auth-screen .row {
+  width: 100%;
+  margin: 0 auto;
+  justify-content: center;
+}
+
+
+/* Column ko center aur limited width */
+
+.auth-screen .row > [class*="col-"] {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+
+/* Agar auth-card present hai */
+
+.auth-screen .auth-card {
+  width: 100%;
+  max-width: 420px;
+
+  margin-left: auto !important;
+  margin-right: auto !important;
+
+  background: #ffffff;
+
+  padding: 35px;
+
+  border-radius: 18px;
+
+  border: 1px solid #e5e7eb;
+
+  box-shadow:
+    0 15px 40px rgba(0, 0, 0, 0.10);
+}
+
+
+/* =========================================
+   AUTH FORM
+========================================= */
+
+.auth-screen .form-label {
+  font-weight: 500;
+  color: #343a40;
+  margin-bottom: 7px;
+}
+
+.auth-screen .form-control {
+  height: 47px;
+
+  border-radius: 9px;
+
+  border: 1px solid #ced4da;
+
+  padding: 10px 13px;
+}
+
+.auth-screen .form-control:focus {
+  border-color: #0d6efd;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(13, 110, 253, 0.12);
+}
+
+
+/* =========================================
+   AUTH BUTTON
+========================================= */
+
+.auth-screen .btn-primary {
+  border-radius: 9px;
+}
+
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 768px) {
+
+  .auth-screen {
+    min-height: calc(100vh - 64px);
+    padding: 25px 15px;
+  }
+
+  .auth-screen .auth-card {
+    max-width: 430px;
+    padding: 30px 25px;
+  }
+}
+
+@media (max-width: 480px) {
+
+  .auth-screen {
+    padding: 20px 12px;
+  }
+
+  .auth-screen .auth-card {
+    padding: 25px 18px;
+    border-radius: 13px;
+  }
 }
